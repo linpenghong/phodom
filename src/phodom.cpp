@@ -75,19 +75,43 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 
 		static tf::TransformBroadcaster tfBr;
 		tf::Transform transform;
-		transform.setOrigin(tf::Vector3(0,0,0));
+		transform.setOrigin(tf::Vector3(odom.pose.pose.position.x,odom.pose.pose.position.y,odom.pose.pose.position.z));
 		transform.setRotation(tf::Quaternion(odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w));
 		tfBr.sendTransform(tf::StampedTransform(transform, msg->header.stamp, "map", "phodom"));
 	}
 	else {
-		filter_->bodyState.imu.time = time;
-		filter_->bodyState.imu.acceleration.setZero();
-		filter_->bodyState.imu.angularVelocity.setZero();
-		filter_->bodyState.q_B_G = Eigen::Quaterniond(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
-		filter_->bodyState.s = filter_->bodyState.q_B_G.toRotationMatrix()*parameter_->getGlobalGravity()*0.01;//for 100 Hz imu frequency
-		filter_->bodyState.y = filter_->bodyState.s * 0.01 * 0.5;
-//		filter_->bodyState.q_B_G = Eigen::Quaterniond(1, 0, 0, 0);
-		filter_->bodyState.is_initialized = true;
+		static float counter = 0;
+		static Eigen::Vector4d qq = Eigen::Vector4d::Zero();
+		static Eigen::Vector3d gg = Eigen::Vector3d::Zero();
+		static Eigen::Vector3d g_(0,0,-9.8);
+		if(counter <= 9)
+		{
+			qq(0) += msg->orientation.w;
+			qq(1) += msg->orientation.x;
+			qq(2) += msg->orientation.y;
+			qq(3) += msg->orientation.z;
+			gg(0) += msg->linear_acceleration.x;
+			gg(1) += msg->linear_acceleration.y;
+			gg(2) += msg->linear_acceleration.z;
+			counter++;
+		}
+
+		if(counter > 9)
+		{
+			Eigen::Quaterniond g2b;
+			g2b.FromTwoVectors(g_, gg);
+
+			filter_->bodyState.imu.time = time;
+			filter_->bodyState.imu.acceleration.setZero();
+			filter_->bodyState.imu.angularVelocity.setZero();
+			filter_->bodyState.q_B_G = Eigen::Quaterniond(g2b.w(), g2b.x(), g2b.y(), g2b.z());
+//			filter_->bodyState.q_B_G = Eigen::Quaterniond(qq(0)/10.0, qq(1)/10.0, qq(2)/10.0, qq(3)/10.0);
+//			filter_->bodyState.q_B_G = Eigen::Quaterniond(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
+			filter_->bodyState.s = filter_->bodyState.q_B_G.toRotationMatrix()*parameter_->getGlobalGravity()*0.01;//for 100 Hz imu frequency
+			filter_->bodyState.y = filter_->bodyState.s * 0.01 * 0.5;
+//			filter_->bodyState.q_B_G = Eigen::Quaterniond(1, 0, 0, 0);
+			filter_->bodyState.is_initialized = true;
+		}
 	}
 }
 

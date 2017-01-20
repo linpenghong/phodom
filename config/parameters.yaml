@@ -37,7 +37,7 @@ Imu.Ta: [1 0 0; 0 1 0; 0 0 1]
 Imu.accelerometerBias: [0 0 0]
 Imu.gyroscopeBias: [0 0 0]
 
-Imu.globalGravity: [0.0 0.0 -9.786871284]
+Imu.globalGravity: [0.0 0.0 -9.78]
 
 Imu.accelerometerVariance: 0.008
 Imu.gyroscopeVariance: 0.0001
