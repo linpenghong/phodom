@@ -49,17 +49,17 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 		imuBuffer_->data.push_back(imu);
 		filter_->propagateToTime(time);
 		static nav_msgs::Odometry odom;
-		odom.header.frame_id = "map";
+		odom.header.frame_id = "imu_link";
 		odom.header.stamp = msg->header.stamp;
-		odom.pose.pose.position.x = filter_->bodyState.p_B_G(0);
-		odom.pose.pose.position.y = filter_->bodyState.p_B_G(1);
-		odom.pose.pose.position.z = filter_->bodyState.p_B_G(2);
-//		odom.pose.pose.position.x = 0;
-//		odom.pose.pose.position.y = 0;
-//		odom.pose.pose.position.z = 0;
+//		odom.pose.pose.position.x = filter_->bodyState.p_B_G(0);
+//		odom.pose.pose.position.y = filter_->bodyState.p_B_G(1);
+//		odom.pose.pose.position.z = filter_->bodyState.p_B_G(2);
+		odom.pose.pose.position.x = 0;
+		odom.pose.pose.position.y = 0;
+		odom.pose.pose.position.z = 0;
 
-//		Eigen::Quaterniond odom_transform(0,1,0,0);//rotation around x axis for 180 degree
-		Eigen::Quaterniond odom_transform(1,0,0,0);//unit quaternion
+		Eigen::Quaterniond odom_transform(0,1,0,0);//rotation around x axis for 180 degree
+//		Eigen::Quaterniond odom_transform(1,0,0,0);//unit quaternion
 		Eigen::Quaterniond new_odom = odom_transform*filter_->bodyState.q_B_G;
 
 		odom.pose.pose.orientation.w = new_odom.w();
@@ -104,12 +104,42 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 			filter_->bodyState.imu.time = time;
 			filter_->bodyState.imu.acceleration.setZero();
 			filter_->bodyState.imu.angularVelocity.setZero();
-			filter_->bodyState.q_B_G = Eigen::Quaterniond(g2b.w(), g2b.x(), g2b.y(), g2b.z());
-//			filter_->bodyState.q_B_G = Eigen::Quaterniond(qq(0)/10.0, qq(1)/10.0, qq(2)/10.0, qq(3)/10.0);
+//			filter_->bodyState.q_B_G = Eigen::Quaterniond(g2b.w(), g2b.x(), g2b.y(), g2b.z()); //quaternion from two vector need to reconstruct
+			filter_->bodyState.q_B_G = Eigen::Quaterniond(qq(0)/10.0, qq(1)/10.0, qq(2)/10.0, qq(3)/10.0);
 //			filter_->bodyState.q_B_G = Eigen::Quaterniond(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
 			filter_->bodyState.s = filter_->bodyState.q_B_G.toRotationMatrix()*parameter_->getGlobalGravity()*0.01;//for 100 Hz imu frequency
 			filter_->bodyState.y = filter_->bodyState.s * 0.01 * 0.5;
-//			filter_->bodyState.q_B_G = Eigen::Quaterniond(1, 0, 0, 0);
+
+			filter_->imuState.T_a = parameter_->getAccelerometerShapeMatrix();
+			filter_->imuState.T_g = parameter_->getGyroscopeShapeMatrix();
+			filter_->imuState.T_s = parameter_->getGyroscopeAccelerationSensitivityMatrix();
+
+		    Eigen::VectorXd covar_diag(56);
+		    covar_diag.segment<3>(0) = parameter_->getOrientationNoise();
+		    covar_diag.segment<3>(3) = parameter_->getPositionNoise();
+		    covar_diag.segment<3>(6) = parameter_->getVelocityNoise();
+		    covar_diag.segment<3>(9) = parameter_->getGyroscopeBiasNoise();
+		    covar_diag.segment<3>(12) = parameter_->getAccelerometerBiasNoise();
+		    covar_diag.segment<3>(15) = parameter_->getGyroscopeShapeMatrixNoise().block<1, 3>(0, 0).transpose();
+		    covar_diag.segment<3>(18) = parameter_->getGyroscopeShapeMatrixNoise().block<1, 3>(1, 0).transpose();
+		    covar_diag.segment<3>(21) = parameter_->getGyroscopeShapeMatrixNoise().block<1, 3>(2, 0).transpose();
+		    covar_diag.segment<3>(24) = parameter_->getGyroscopeAccelerationSensitivityMatrixNoise().block<1, 3>(0, 0).transpose();
+		    covar_diag.segment<3>(27) = parameter_->getGyroscopeAccelerationSensitivityMatrixNoise().block<1, 3>(1, 0).transpose();
+		    covar_diag.segment<3>(30) = parameter_->getGyroscopeAccelerationSensitivityMatrixNoise().block<1, 3>(2, 0).transpose();
+		    covar_diag.segment<3>(33) = parameter_->getAccelerometerShapeMatrixNoise().block<1, 3>(0, 0).transpose();
+		    covar_diag.segment<3>(36) = parameter_->getAccelerometerShapeMatrixNoise().block<1, 3>(1, 0).transpose();
+		    covar_diag.segment<3>(39) = parameter_->getAccelerometerShapeMatrixNoise().block<1, 3>(2, 0).transpose();
+		    covar_diag.segment<3>(42) = parameter_->getPositionOfBodyInCameraFrameNoise();
+		    covar_diag.segment<2>(45) = parameter_->getFocalPointNoise();
+		    covar_diag.segment<2>(47) = parameter_->getOpticalCenterNoise();
+		    covar_diag.segment<3>(49) = parameter_->getRadialDistortionNoise();
+		    covar_diag.segment<2>(52) = parameter_->getTangentialDistortionNoise();
+		    covar_diag(54) = parameter_->getCameraDelayTimeNoise();
+		    covar_diag(55) = parameter_->getCameraReadoutTimeNoise();
+
+			filter_->bodyState.covariance.setZero();
+			filter_->bodyState.covariance = covar_diag.asDiagonal();
+
 			filter_->bodyState.is_initialized = true;
 		}
 	}

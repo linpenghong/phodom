@@ -16,6 +16,8 @@
 #include "imu_buffer.h"
 #include "parameter.h"
 
+class Filter;
+
 class BodyState {
 public:
 	BodyState(std::shared_ptr<const Parameter> parameter);
@@ -23,7 +25,7 @@ public:
 	Eigen::VectorXd getBodyStateVector();
 	void setBodyStateVector(Eigen::VectorXd other);
 	void propagateBodyState(BodyState &state_l1, const ImuItem &imu_l1);
-	Eigen::Matrix<double, 56, 56> propagateCovariance(BodyState &state_l1);
+	void propagateCovariance(const Filter& filter, BodyState &state_l1);
 
 
 	BodyState& operator=(const BodyState& other) = default;
@@ -43,9 +45,11 @@ public:
 	Eigen::Vector3d y;
 	Eigen::Matrix<double, 56, 56> covariance;
 private:
-	Eigen::Matrix<double, 15, 15> getBodyStateTransitionMatrix(BodyState &state_l1);
-	Eigen::Matrix<double, 15, 27> getImuCalibrationParamsTransitionMatrix(BodyState &state_l1);
-	Eigen::Matrix<double, 15, 15> propagationNoiseMatrix(BodyState &state_l1);
+	Eigen::Matrix<double, 15, 15> getBodyStateTransitionMatrix(const Filter& filter, BodyState &state_l1);
+	Eigen::Matrix<double, 15, 27> getImuCalibrationParamsTransitionMatrix(const Filter& filter, BodyState &state_l1);
+	Eigen::Matrix<double, 15, 15> propagationNoiseMatrix(const Filter& filter, BodyState& state_l1,
+			const Eigen::Matrix<double, 15, 15>& bodyStateTransitionMatrix);
+
 	Eigen::VectorXd bodyStateVector_;
 	std::shared_ptr<const Parameter> parameter_;
 };

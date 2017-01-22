@@ -32,6 +32,8 @@ public:
 	Filter(std::shared_ptr<Parameter> parameter_, std::shared_ptr<ImuBuffer> imuBuffer_);
 	void initialize();
 	void reset();
+
+	//imu calibration
 	void computeImuEstimate(boost::circular_buffer<ImuItem>::iterator it);
 	void propagateToTime(double time);
 	void stateAugment();

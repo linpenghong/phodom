@@ -26,3 +26,12 @@ Eigen::Matrix4d Rotation::bigOmegaMatrix(const Eigen::Vector3d &v) {
     m.block<1, 3>(3, 0) = -1*v.transpose();
     return m;
 }
+
+Eigen::Matrix<double, 3, 9> Rotation::derivativeMatrixByVector(const Eigen::Vector3d &v) {
+
+	Eigen::Matrix<double, 3, 9> m = Eigen::Matrix<double, 3, 9>::Zero();
+	m.block<1, 3>(0, 0) = v.transpose();
+	m.block<1, 3>(1, 3) = v.transpose();
+	m.block<1, 3>(2, 6) = v.transpose();
+	return m;
+}

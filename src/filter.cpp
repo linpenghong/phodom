@@ -39,13 +39,12 @@ void Filter::propagateToTime(double time) {
 
 	while(!imuBuffer->data.empty() && imuBuffer->data.begin()->time < time) {
 		computeImuEstimate(imuBuffer->data.begin());
-		std::cout << "IMU messurem = " << imuBuffer->data.begin()->angularVelocity.transpose() << std::endl;
-		std::cout << "IMU estimate = " << imuEstimate_.angularVelocity.transpose() << std::endl;
 		BodyState nextState(bodyState);
 		bodyState.propagateBodyState(nextState, imuEstimate_);
-//		bodyState.propagateCovariance(nextState);
+		bodyState.propagateCovariance(*this, nextState);
 		bodyState = nextState;
 		imuBuffer->data.pop_front();
 	}
 	std::cout << "New Body State : " << bodyState.q_B_G.x() << ", " << bodyState.q_B_G.y() << ", " << bodyState.q_B_G.z() << ", " << bodyState.q_B_G.w() << std::endl;
+	std::cout << "New Covariance :\n" << bodyState.covariance << std::endl;
 }
