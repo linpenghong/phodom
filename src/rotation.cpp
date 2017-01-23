@@ -9,6 +9,7 @@
 ********************************************************/
 
 #include "rotation.h"
+#include <math.h>
 
 Eigen::Matrix3d Rotation::crossMatrix(const Eigen::Vector3d &v) {
     Eigen::Matrix3d m;
@@ -34,4 +35,13 @@ Eigen::Matrix<double, 3, 9> Rotation::derivativeMatrixByVector(const Eigen::Vect
 	m.block<1, 3>(1, 3) = v.transpose();
 	m.block<1, 3>(2, 6) = v.transpose();
 	return m;
+}
+
+Eigen::Quaterniond Rotation::fromTwoVectors(const Eigen::Vector3d& vFrom, const Eigen::Vector3d& vTo) {
+	Eigen::Vector3d cross = vFrom.cross(vTo);
+	cross.normalize();
+	double alpha = acos(vFrom.dot(vTo)/(vFrom.norm()*vTo.norm()));
+	Eigen::Quaterniond quat(cos(alpha/2), sin(alpha/2)*cross(0), sin(alpha/2)*cross(1), sin(alpha/2)*cross(2));
+	quat.normalize();
+	return quat;
 }

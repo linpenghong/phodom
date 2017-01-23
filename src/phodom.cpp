@@ -11,6 +11,9 @@
 
 #include <string>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
+
 Phodom::Phodom() {
 	imuBuffer_.reset(new ImuBuffer(100));
 }
@@ -51,12 +54,12 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 		static nav_msgs::Odometry odom;
 		odom.header.frame_id = "imu_link";
 		odom.header.stamp = msg->header.stamp;
-//		odom.pose.pose.position.x = filter_->bodyState.p_B_G(0);
-//		odom.pose.pose.position.y = filter_->bodyState.p_B_G(1);
-//		odom.pose.pose.position.z = filter_->bodyState.p_B_G(2);
-		odom.pose.pose.position.x = 0;
-		odom.pose.pose.position.y = 0;
-		odom.pose.pose.position.z = 0;
+		odom.pose.pose.position.x = filter_->bodyState.p_B_G(0);
+		odom.pose.pose.position.y = filter_->bodyState.p_B_G(1);
+		odom.pose.pose.position.z = filter_->bodyState.p_B_G(2);
+//		odom.pose.pose.position.x = 0;
+//		odom.pose.pose.position.y = 0;
+//		odom.pose.pose.position.z = 0;
 
 		Eigen::Quaterniond odom_transform(0,1,0,0);//rotation around x axis for 180 degree
 //		Eigen::Quaterniond odom_transform(1,0,0,0);//unit quaternion
@@ -99,13 +102,13 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 		if(counter > 9)
 		{
 			Eigen::Quaterniond g2b;
-			g2b.FromTwoVectors(g_, gg);
+			g2b = Rotation::fromTwoVectors(g_, gg);
 
 			filter_->bodyState.imu.time = time;
 			filter_->bodyState.imu.acceleration.setZero();
 			filter_->bodyState.imu.angularVelocity.setZero();
-//			filter_->bodyState.q_B_G = Eigen::Quaterniond(g2b.w(), g2b.x(), g2b.y(), g2b.z()); //quaternion from two vector need to reconstruct
-			filter_->bodyState.q_B_G = Eigen::Quaterniond(qq(0)/10.0, qq(1)/10.0, qq(2)/10.0, qq(3)/10.0);
+			filter_->bodyState.q_B_G = Eigen::Quaterniond(g2b.w(), g2b.x(), g2b.y(), g2b.z()); //quaternion from two vector need to reconstruct
+//			filter_->bodyState.q_B_G = Eigen::Quaterniond(qq(0)/10.0, qq(1)/10.0, qq(2)/10.0, qq(3)/10.0);
 //			filter_->bodyState.q_B_G = Eigen::Quaterniond(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
 			filter_->bodyState.s = filter_->bodyState.q_B_G.toRotationMatrix()*parameter_->getGlobalGravity()*0.01;//for 100 Hz imu frequency
 			filter_->bodyState.y = filter_->bodyState.s * 0.01 * 0.5;
@@ -153,6 +156,13 @@ void Phodom::imageCallback(const sensor_msgs::ImageConstPtr& msg) {
 	double time = getMessageTime(msg->header.stamp);
 	cv::Mat image = cv_bridge::toCvCopy(msg, msg->encoding)->image;
 	imageItem = ImageItem(time, image);
+
+    cv::Ptr<cv::FeatureDetector> detector_;
+    cv::Ptr<cv::DescriptorExtractor> extractor_;
+    detector_ = cv::FeatureDetector::create("ORB");
+    detector_->set("nFeatures", 100);
+    extractor_ = cv::DescriptorExtractor::create("ORB");
+	Feature feature = Feature::detectFeatures(detector_, extractor_, imageItem.getImage());
 }
 
 double Phodom::getMessageTime(ros::Time stamp) {

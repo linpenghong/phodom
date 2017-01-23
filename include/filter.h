@@ -11,6 +11,7 @@
 #ifndef PHODOM3_INCLUDE_FILTER_H_
 #define PHODOM3_INCLUDE_FILTER_H_
 
+#include "track.h"
 #include "imu_buffer.h"
 #include "image_item.h"
 #include "parameter.h"
@@ -36,6 +37,8 @@ public:
 	//imu calibration
 	void computeImuEstimate(boost::circular_buffer<ImuItem>::iterator it);
 	void propagateToTime(double time);
+	void stepImage(double time, cv::Mat& frame, const ImuBuffer::iterator& hint_gyro, const ImuBuffer::iterator& hint_accel);
+	void featureMatching();
 	void stateAugment();
 	void update();
 public:
@@ -48,6 +51,10 @@ public:
 	BodyState bodyState;
 	ImuState imuState;
 	ParameterState paramState;
+
+//	std::size_t frame_rows_;
+//	Track feature_tracker_;
+//	Track::feature_track_list features_tracked_;
 
 	std::shared_ptr<Parameter> parameter;
 	std::shared_ptr<ImuBuffer> imuBuffer;

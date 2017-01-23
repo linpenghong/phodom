@@ -61,8 +61,8 @@ Filter.maxTriangulationIterations: 30
 # All noise parameters must be non-zero.
 
 Noise.orientation: [0.3 0.3 0.3]
-Noise.position: [12.0 12.0 12.0]
-Noise.velocity: [12.0 12.0 12.0]
+Noise.position: [0.5 0.5 0.5]
+Noise.velocity: [0.4 0.4 0.4]
 Noise.gyroscopeBias: [0.01 0.01 0.01]
 Noise.accelerometerBias: [0.1 0.1 0.1]
 Noise.Ts: [0.001 0.001 0.001; 0.001 0.001 0.001; 0.001 0.001 0.001]

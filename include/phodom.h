@@ -11,6 +11,7 @@
 #ifndef PHODOM3_INCLUDE_PHODOM_H_
 #define PHODOM3_INCLUDE_PHODOM_H_
 
+#include "feature.h"
 #include "imu_buffer.h"
 #include "parameter.h"
 #include "body_state.h"

@@ -26,7 +26,7 @@ public:
 	void setBodyStateVector(Eigen::VectorXd other);
 	void propagateBodyState(BodyState &state_l1, const ImuItem &imu_l1);
 	void propagateCovariance(const Filter& filter, BodyState &state_l1);
-
+	void updateWithStateDelta(const Eigen::VectorXd& delta_x);
 
 	BodyState& operator=(const BodyState& other) = default;
     BodyState& operator=(BodyState&& other) = default;

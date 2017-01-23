@@ -1,13 +1,13 @@
 /********************************************************
 *   Copyright (C) 2017 All rights reserved.
 *   
-*   Filename:feature_frame.cpp
+*   Filename:feature.cpp
 *   Author  :linpenghong
-*   Date    :Jan 10, 2017
+*   Date    :Jan 23, 2017
 *   Describe:TODO
 *
 ********************************************************/
-#include "feature_frame.h"
+#include "feature.h"
 #include "exceptions/general_exception.h"
 
 #include <opencv2/core/core.hpp>
@@ -19,17 +19,17 @@
 
 #ifdef DEBUG
 #include <iostream>
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+#include <highgui.h>
+#include <cv.h>
 #endif
 
-FeatureFrame FeatureFrame::detectFeatures(cv::Ptr<cv::FeatureDetector> detector,
+Feature Feature::detectFeatures(cv::Ptr<cv::FeatureDetector> detector,
         cv::Ptr<cv::DescriptorExtractor> extractor, cv::Mat& image) {
-	FeatureFrame frame_features;
+	Feature frame_features;
 
     assert(image.channels() == 3);
 
-    cv::Mat gray = FeatureFrame::toGray(image);
+    cv::Mat gray = Feature::toGray(image);
     frame_features.detectKeypoints(detector, gray);
     frame_features.computeDescriptors(extractor, gray);
 
@@ -38,7 +38,7 @@ FeatureFrame FeatureFrame::detectFeatures(cv::Ptr<cv::FeatureDetector> detector,
     return frame_features;
 }
 
-cv::Mat FeatureFrame::toGray(const cv::Mat& image) {
+cv::Mat Feature::toGray(const cv::Mat& image) {
     switch (image.channels()) {
         case 1:
             return image;
@@ -53,15 +53,15 @@ cv::Mat FeatureFrame::toGray(const cv::Mat& image) {
     }
 }
 
-void FeatureFrame::detectKeypoints(cv::Ptr<cv::FeatureDetector> detector, cv::Mat gray) {
+void Feature::detectKeypoints(cv::Ptr<cv::FeatureDetector> detector, cv::Mat gray) {
      detector->detect(gray, keypoints_);
 }
 
-void FeatureFrame::computeDescriptors(cv::Ptr<cv::DescriptorExtractor> extractor, cv::Mat gray) {
+void Feature::computeDescriptors(cv::Ptr<cv::DescriptorExtractor> extractor, cv::Mat gray) {
      extractor->compute(gray, keypoints_, descriptors_);
 }
 
-void FeatureFrame::drawFeatures(cv::Mat& image, cv::Scalar color, double scale_factor) {
+void Feature::drawFeatures(cv::Mat& image, cv::Scalar color, double scale_factor) {
     int radius = 2;
     for (const cv::KeyPoint& kpt : keypoints_) {
         int x = kpt.pt.x/scale_factor;
@@ -78,7 +78,7 @@ void FeatureFrame::drawFeatures(cv::Mat& image, cv::Scalar color, double scale_f
 #endif
 }
 
-std::vector<cv::DMatch> FeatureFrame::matchFeatures(cv::Ptr<cv::DescriptorMatcher> matcher, const FeatureFrame &other, float threshold) {
+std::vector<cv::DMatch> Feature::matchFeatures(cv::Ptr<cv::DescriptorMatcher> matcher, const Feature &other, float threshold) {
     if (other.descriptors_.rows == 0) {
         return std::vector<cv::DMatch>();
     }
@@ -112,7 +112,7 @@ std::vector<cv::DMatch> FeatureFrame::matchFeatures(cv::Ptr<cv::DescriptorMatche
     }
 }
 
-double FeatureFrame::computeDistanceLimitForMatch(const std::vector<cv::DMatch>& matches) const {
+double Feature::computeDistanceLimitForMatch(const std::vector<cv::DMatch>& matches) const {
     double min_distance = 100;
     double max_distance = 0;
     double mean_distance = 0;
@@ -130,10 +130,10 @@ double FeatureFrame::computeDistanceLimitForMatch(const std::vector<cv::DMatch>&
     return std::max(2*min_distance, 5.0);
 }
 
-std::vector<cv::KeyPoint> &FeatureFrame::keypoints() {
+std::vector<cv::KeyPoint> &Feature::keypoints() {
     return keypoints_;
 }
 
-const std::vector<cv::KeyPoint> &FeatureFrame::keypoints() const {
+const std::vector<cv::KeyPoint> &Feature::keypoints() const {
     return keypoints_;
 }

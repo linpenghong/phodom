@@ -73,9 +73,12 @@ void BodyState::propagateCovariance(const Filter& filter, BodyState &state_l1) {
 	Eigen::Matrix<double, 15, 15> bodyStateTransitionM = BodyState::getBodyStateTransitionMatrix(filter, state_l1);
 	Eigen::Matrix<double, 56, 56> transitionM = Eigen::Matrix<double, 56, 56>::Identity();
 	transitionM.block<15, 15>(0, 0) = bodyStateTransitionM;
-	transitionM.block<15, 27>(0, 0) = BodyState::getImuCalibrationParamsTransitionMatrix(filter, state_l1);
+	transitionM.block<15, 27>(0, 15) = BodyState::getImuCalibrationParamsTransitionMatrix(filter, state_l1);
 
 	state_l1.covariance = transitionM * covariance * transitionM.transpose();
+
+	std::cout << "New Transition :\n" << transitionM.block<15, 15>(0, 0) << std::endl;
+
 	state_l1.covariance.block<15, 15>(0, 0) += BodyState::propagationNoiseMatrix(filter, state_l1, bodyStateTransitionM);
 }
 
@@ -121,6 +124,9 @@ Eigen::Matrix<double, 15, 15> BodyState::getBodyStateTransitionMatrix(const Filt
 Eigen::Matrix<double, 15, 27> BodyState::getImuCalibrationParamsTransitionMatrix(const Filter& filter, BodyState &state_l1) {
 
 	Eigen::Matrix<double, 15, 27> gamma_imu = Eigen::Matrix<double, 15, 27>::Zero();
+
+//	return gamma_imu;
+
 	double deltaT = state_l1.imu.time - imu.time;
 	double half_deltaT = 0.5 * deltaT;
 	double squared_half_deltaT = half_deltaT*half_deltaT;
@@ -193,6 +199,10 @@ Eigen::Matrix<double, 15, 15> BodyState::propagationNoiseMatrix(const Filter& fi
 
     Eigen::Matrix<double, 15, 15> n_c = g_c*q_c*g_c.transpose();
     Eigen::Matrix<double, 15, 15> q_d = 0.5*deltaT*bodyStateTransitionMatrix*n_c*bodyStateTransitionMatrix.transpose() + n_c;
+
+//    std::cout << "New NoiseCov :\n" << q_d << std::endl;
+//    q_d.setZero();
+
     return q_d;
 }
 
@@ -206,4 +216,13 @@ Eigen::VectorXd BodyState::getBodyStateVector() {
 	bodyStateVector_.segment<3>(10) = b_g;
 	bodyStateVector_.segment<3>(13) = b_a;
 	return bodyStateVector_;
+}
+
+void BodyState::updateWithStateDelta(const Eigen::VectorXd& delta_x) {
+    Eigen::Quaterniond delta_q(0.5*delta_x(0), 0.5*delta_x(1), 0.5*delta_x(2), 1.0);
+    delta_q.normalize();
+    q_B_G = delta_q*q_B_G;
+    q_B_G.normalize();
+    p_B_G += delta_x.segment<3>(3);
+    v_B_G += delta_x.segment<3>(6);
 }
