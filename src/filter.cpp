@@ -14,7 +14,7 @@
 
 #include <iostream>
 
-Filter::Filter(std::shared_ptr<Parameter> parameter_, std::shared_ptr<ImuBuffer> imuBuffer_) : bodyState(parameter_) {
+Filter::Filter(std::shared_ptr<Parameter> parameter_, std::shared_ptr<ImuBuffer> imuBuffer_) : bodyState(parameter_), feature_tracker(100) {
 	parameter = parameter_;
 	imuBuffer = imuBuffer_;
 	propaState.setZero(57);
@@ -55,6 +55,9 @@ void Filter::stepImage(double time, cv::Mat& frame, const ImuBuffer::iterator& h
     if (!bodyState.is_initialized) {
         return;
     }
+    Track::feature_track_list current_features_tracked;
+    current_features_tracked = feature_tracker.processImage(features_tracked, frame);
+    features_tracked = current_features_tracked;
 //    stateAugment();
 //    CameraPose& last_camera_pose = state().poses().back();
 //

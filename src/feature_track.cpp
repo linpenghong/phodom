@@ -15,8 +15,8 @@
 
 #ifdef DEBUG
 #include <iostream>
-#include <highgui.h>
-#include <cv.h>
+#include <opencv/highgui.h>
+#include <opencv/cv.h>
 #endif
 
 FeatureTrack::FeatureTrack() {

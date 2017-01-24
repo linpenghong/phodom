@@ -15,12 +15,12 @@
 #include <opencv2/calib3d/calib3d.hpp>
 
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
-#include <highgui.h>
-#include <cv.h>
+#include <opencv/highgui.h>
+#include <opencv/cv.h>
 #endif
 
 Feature Feature::detectFeatures(cv::Ptr<cv::FeatureDetector> detector,

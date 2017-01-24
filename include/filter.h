@@ -53,8 +53,8 @@ public:
 	ParameterState paramState;
 
 //	std::size_t frame_rows_;
-//	Track feature_tracker_;
-//	Track::feature_track_list features_tracked_;
+	Track feature_tracker;
+	Track::feature_track_list features_tracked;
 
 	std::shared_ptr<Parameter> parameter;
 	std::shared_ptr<ImuBuffer> imuBuffer;

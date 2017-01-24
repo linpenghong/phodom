@@ -16,10 +16,9 @@
 
 std::size_t CameraPose::camera_pose_counter = 0;
 
-CameraPose::CameraPose(const BodyState& body_state, ImuBuffer::iterator hint_gyro, ImuBuffer::iterator hint_accel) {
+CameraPose::CameraPose(const BodyState& body_state, ImuBuffer::iterator hintImu) {
     body_state_ = std::make_shared<BodyState>(body_state);
-    hint_gyro_ = hint_gyro;
-    hint_accel_ = hint_accel;
+    hint_imu_ = hintImu;
     camera_pose_id_ = CameraPose::camera_pose_counter++;
 }
 
@@ -99,12 +98,8 @@ void CameraPose::updateWithStateDelta(const Eigen::VectorXd& delta_x) {
     body_state_->updateWithStateDelta(delta_x);
 }
 
-ImuBuffer::iterator CameraPose::gyroHint() const {
-    return hint_gyro_;
-}
-
-ImuBuffer::iterator CameraPose::accelHint() const {
-    return hint_accel_;
+ImuBuffer::iterator CameraPose::imuHint() const {
+    return hint_imu_;
 }
 
 std::size_t CameraPose::getCameraPoseId() const {

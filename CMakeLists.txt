@@ -154,6 +154,15 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/include INCLUDE_SOURCE)
 # target_link_libraries(phodom3_node
 #   ${catkin_LIBRARIES}
 # )
+add_executable(feature_test ${SRC_SOURCE} ${INCLUDE_SOURCE} ${EXCEPTION_SOURCE} ${PROJECT_SOURCE_DIR}/src/tools/feature_test.cpp)
+target_link_libraries(feature_test
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${OpenCV_LIBS}
+  ${cv_bridge_LIBRARIES}
+  ${eigen_conversions_LIBRARIES}
+)
+
 add_executable(ros_test ${SRC_SOURCE} ${INCLUDE_SOURCE} ${EXCEPTION_SOURCE} ${PROJECT_SOURCE_DIR}/src/tools/ros_test.cpp)
 target_link_libraries(ros_test
   ${catkin_LIBRARIES}

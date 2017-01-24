@@ -157,12 +157,12 @@ void Phodom::imageCallback(const sensor_msgs::ImageConstPtr& msg) {
 	cv::Mat image = cv_bridge::toCvCopy(msg, msg->encoding)->image;
 	imageItem = ImageItem(time, image);
 
-    cv::Ptr<cv::FeatureDetector> detector_;
-    cv::Ptr<cv::DescriptorExtractor> extractor_;
-    detector_ = cv::FeatureDetector::create("ORB");
-    detector_->set("nFeatures", 100);
-    extractor_ = cv::DescriptorExtractor::create("ORB");
-	Feature feature = Feature::detectFeatures(detector_, extractor_, imageItem.getImage());
+//    cv::Ptr<cv::FeatureDetector> detector_;
+//    cv::Ptr<cv::DescriptorExtractor> extractor_;
+//    detector_ = cv::FeatureDetector::create("ORB");
+//    detector_->set("nFeatures", 100);
+//    extractor_ = cv::DescriptorExtractor::create("ORB");
+//	Feature feature = Feature::detectFeatures(detector_, extractor_, imageItem.getImage());
 }
 
 double Phodom::getMessageTime(ros::Time stamp) {

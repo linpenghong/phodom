@@ -12,6 +12,7 @@
 #define PHODOM_INCLUDE_CAMERA_POSE_H_
 
 #include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 #include <limits>
 #include <set>
 #include <memory>
@@ -23,7 +24,7 @@ class Filter;
 
 class CameraPose {
 public:
-    CameraPose(const BodyState& body_state, ImuBuffer::iterator hint_gyro, ImuBuffer::iterator hint_accel);
+    CameraPose(const BodyState& body_state, ImuBuffer::iterator hintImu);
 
     std::size_t getActiveFeaturesCount() const;
     void setActiveFeaturesCount(std::size_t i);
@@ -51,8 +52,7 @@ public:
 
     void updateWithStateDelta(const Eigen::VectorXd& delta_x);
 
-    ImuBuffer::iterator gyroHint() const;
-    ImuBuffer::iterator accelHint() const;
+    ImuBuffer::iterator imuHint() const;
 
     std::size_t getCameraPoseId() const;
 
@@ -62,8 +62,7 @@ private:
     std::set<int> feature_ids_;
     std::size_t features_active_;
     std::shared_ptr<BodyState> body_state_;
-    ImuBuffer::iterator hint_gyro_;
-    ImuBuffer::iterator hint_accel_;
+    ImuBuffer::iterator hint_imu_;
 };
 
 
