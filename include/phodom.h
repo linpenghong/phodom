@@ -50,6 +50,7 @@ private:
     ros::Subscriber imageSub_;
 
     //==============variables================//
+    ImuBuffer::iterator imuIter_;
     std::shared_ptr<ImuBuffer> imuBuffer_;
     std::shared_ptr<Parameter> parameter_;
     std::shared_ptr<Filter> filter_;

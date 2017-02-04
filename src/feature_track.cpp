@@ -26,6 +26,11 @@ FeatureTrack::FeatureTrack() {
     was_used_for_residualization = false;
 }
 
+const Eigen::Vector2d& FeatureTrack::operator[](std::size_t i) const {
+    assert(i < positions.size() && i >= 0);
+    return positions[i];
+}
+
 void FeatureTrack::drawFeatureTrack(cv::Mat& image, cv::Scalar color, int thickness) const {
     if (positions.size() < 2) {
         return;

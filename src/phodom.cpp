@@ -41,8 +41,8 @@ int Phodom::run()
  * imu callback, all message received would be pushed_back to the imu buffer
  */
 void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
-	std::cout << "Received a imu message!" << std::endl;
-	std::cout << "Reference state: " << msg->orientation.x << ", " << msg->orientation.y << ", " << msg->orientation.z << ", " << msg->orientation.w << std::endl;
+//	std::cout << "Received a imu message!" << std::endl;
+//	std::cout << "Reference state: " << msg->orientation.x << ", " << msg->orientation.y << ", " << msg->orientation.z << ", " << msg->orientation.w << std::endl;
 	double time = getMessageTime(msg->header.stamp);
 	ImuItem imu;
 	imu.time = time;
@@ -152,10 +152,12 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
  * image callback
  */
 void Phodom::imageCallback(const sensor_msgs::ImageConstPtr& msg) {
-	std::cout << "Received a image message!" << std::endl;
+//	std::cout << "Received a image message!" << std::endl;
 	double time = getMessageTime(msg->header.stamp);
 	cv::Mat image = cv_bridge::toCvCopy(msg, msg->encoding)->image;
 	imageItem = ImageItem(time, image);
+
+	filter_->stepImage(imageItem.getTime(), imageItem.getImage(), imuIter_);
 
 //    cv::Ptr<cv::FeatureDetector> detector_;
 //    cv::Ptr<cv::DescriptorExtractor> extractor_;

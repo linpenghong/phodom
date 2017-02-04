@@ -77,7 +77,7 @@ void BodyState::propagateCovariance(const Filter& filter, BodyState &state_l1) {
 
 	state_l1.covariance = transitionM * covariance * transitionM.transpose();
 
-	std::cout << "New Transition :\n" << transitionM.block<15, 15>(0, 0) << std::endl;
+//	std::cout << "New Transition :\n" << transitionM.block<15, 15>(0, 0) << std::endl;
 
 	state_l1.covariance.block<15, 15>(0, 0) += BodyState::propagationNoiseMatrix(filter, state_l1, bodyStateTransitionM);
 }

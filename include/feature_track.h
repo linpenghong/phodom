@@ -18,6 +18,7 @@
 class FeatureTrack {
 public:
 	FeatureTrack();
+	const Eigen::Vector2d& operator[] (std::size_t i) const;
 	void drawFeatureTrack(cv::Mat& image, cv::Scalar color, int thickness) const;
 
 public:

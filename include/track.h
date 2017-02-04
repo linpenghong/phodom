@@ -17,8 +17,10 @@
 #include <vector>
 #include <memory>
 
+class Filter;
 
 class Track {
+	friend class Filter;
 public:
 	using feature_track_list = std::vector<std::shared_ptr<FeatureTrack>>;
 	Track(int track_num);

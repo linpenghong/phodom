@@ -19,6 +19,8 @@
 #include "body_state.h"
 #include "imu_state.h"
 #include "parameter_state.h"
+#include "camera_pose.h"
+#include "camera_pose_buffer.h"
 
 #include <cmath>
 #include <eigen3/Eigen/Core>
@@ -37,7 +39,7 @@ public:
 	//imu calibration
 	void computeImuEstimate(boost::circular_buffer<ImuItem>::iterator it);
 	void propagateToTime(double time);
-	void stepImage(double time, cv::Mat& frame, const ImuBuffer::iterator& hint_gyro, const ImuBuffer::iterator& hint_accel);
+	void stepImage(double time, cv::Mat& frame, const ImuBuffer::iterator& hint_imu);
 	void featureMatching();
 	void stateAugment();
 	void update();
@@ -52,14 +54,30 @@ public:
 	ImuState imuState;
 	ParameterState paramState;
 
-//	std::size_t frame_rows_;
 	Track feature_tracker;
 	Track::feature_track_list features_tracked;
 
+	CameraPoseBuffer cameraPoseBuf;
 	std::shared_ptr<Parameter> parameter;
 	std::shared_ptr<ImuBuffer> imuBuffer;
+    std::shared_ptr<BodyState> body_state_;
+
+    Eigen::Vector3d bias_accelerometer_;
+    Eigen::Vector3d bias_gyroscope_;
+    Eigen::Matrix3d gyroscope_shape_;
+    Eigen::Matrix3d gyroscope_acceleration_sensitivity_;
+    Eigen::Matrix3d accelerometer_shape_;
+    Eigen::Vector3d position_of_body_in_camera_;
+    Eigen::Vector2d focal_point_;
+    Eigen::Vector2d optical_center_;
+    Eigen::Vector3d radial_distortion_;
+    Eigen::Vector2d tangential_distortion_;
+    double camera_delay_;
+    double camera_readout_;
+
 private:
 	void propagateIMUStateAndCovar();
+	void pruneCameraPoses();
 
 private:
 	ImuItem imuEstimate_;

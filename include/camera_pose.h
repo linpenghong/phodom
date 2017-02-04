@@ -23,6 +23,7 @@ class BodyState;
 class Filter;
 
 class CameraPose {
+	friend class Filter;
 public:
     CameraPose(const BodyState& body_state, ImuBuffer::iterator hintImu);
 
