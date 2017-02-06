@@ -141,4 +141,6 @@ Eigen::Vector2d Triangulation::cameraProject(const Eigen::Vector3d& p) const {
     return filter_->optical_center_ + filter_->focal_point_.asDiagonal()*(d_r*uv_vec + d_t);
 }
 
+Eigen::Vector3d Triangulation::GaussNewton() {
 
+}

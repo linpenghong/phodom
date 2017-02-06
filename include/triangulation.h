@@ -31,6 +31,7 @@ public:
 	std::pair<bool, Eigen::Vector3d> getFeaturePos(const FeatureTrack &feature_track);
 	Eigen::Vector3d gFunction(Eigen::Matrix3d R_Ci_C0, Eigen::Vector3d p_Ci_C0, Eigen::Vector3d param);
 	Eigen::Vector2d cameraProject(const Eigen::Vector3d& p) const;
+	Eigen::Vector3d GaussNewton();
 private:
     const Filter* filter_;
 };
