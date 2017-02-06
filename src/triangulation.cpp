@@ -9,11 +9,12 @@
 ********************************************************/
 
 #include "triangulation.h"
-#include "filter.h"
-#include "feature_track.h"
 
 #include <string>
 #include <iostream>
+
+#include "feature_track.h"
+#include "filter.h"
 
 Triangulation::Triangulation(const Filter* filter) : filter_(filter) {
 
@@ -58,10 +59,12 @@ std::pair<bool, Eigen::Vector3d> Triangulation::getFeaturePos(const FeatureTrack
     std::vector<Eigen::Vector2d> measurements;
 
     const CameraPoseBuffer& poses = filter_->cameraPoseBuf;
-    assert(n <= poses.size() - 1);
+    assert(n <= poses.size());
     CameraPoseBuffer::const_iterator it_c0 = std::next(poses.begin(), poses.size() - (n+1));
     CameraPoseBuffer::const_iterator it_end = std::prev(std::end(poses));
     for (auto it = it_c0; it != it_end; ++it) {
+
+        std::cout << "bodyPose = " <<  it->getBodyPositionInGlobalFrame().transpose() << std::endl;
         const CameraPose& c0 = *it_c0;
         const CameraPose& ci = *it;
 
@@ -84,6 +87,13 @@ std::pair<bool, Eigen::Vector3d> Triangulation::getFeaturePos(const FeatureTrack
     x(2) = 1.0;
     x /= initial_guess(2);
 
+
+    std::cout << "feature0 = " << feature_track[0].array() << std::endl;
+    std::cout << "featuren = " << feature_track[n-1].array() << std::endl;
+    std::cout << "z0       = " << z0.transpose() << std::endl;
+    std::cout << "z_last   = " << z_last.transpose() << std::endl;
+    std::cout << "initial_guess = " << initial_guess << std::endl;
+
     {
         Eigen::VectorXd xs(measurements.size());
         Eigen::VectorXd ys(measurements.size());
@@ -97,20 +107,38 @@ std::pair<bool, Eigen::Vector3d> Triangulation::getFeaturePos(const FeatureTrack
         r.block<3, 1>(0, 0) = R_Clast_C0.block<1, 3>(0, 0);
         r.block<3, 1>(3, 0) = R_Clast_C0.block<1, 3>(1, 0);
         r.block<3, 1>(6, 0) = R_Clast_C0.block<1, 3>(2, 0);
-        std::ofstream out("~/dump/feature_" + std::to_string(feature_track.feature_id) + ".txt");
-        out << "{" << std::endl;
-        out << "\"c0_pose_id\": " << it_c0->getCameraPoseId() << "," << std::endl;
-        out << "\"z0\": " << z0.transpose().format(formatter) << "," << std::endl;
-        out << "\"z_last\": " << z_last.transpose().format(formatter) << "," << std::endl;
-        out << "\"p_Clast_C0\": " << p_Clast_C0.transpose().format(formatter) << "," << std::endl;
-        out << "\"R_Clast_C0\": " << r.transpose().format(formatter) << "," << std::endl;
-        out << "\"xs\": " << xs.transpose().format(formatter) << "," << std::endl;
-        out << "\"ys\": " << ys.transpose().format(formatter) << "," << std::endl;
-        out << "\"initial_guess\": " << initial_guess.transpose().format(formatter) << std::endl;
-        out << "}" << std::endl;
     }
+
 
     Eigen::Vector3d global_position;
 
+    global_position.setZero();
+
 	return std::make_pair(true, global_position);
 }
+
+Eigen::Vector3d Triangulation::gFunction(Eigen::Matrix3d R_Ci_C0, Eigen::Vector3d p_Ci_C0, Eigen::Vector3d param) {
+	Eigen::Vector3d temp;
+	temp << param(0), param(1), 1;
+	return R_Ci_C0*temp + param(3)*p_Ci_C0;
+}
+
+Eigen::Vector2d Triangulation::cameraProject(const Eigen::Vector3d& p) const {
+    double u = p(0) / p(2);
+    double v = p(1) / p(2);
+    Eigen::Vector2d uv_vec;
+    uv_vec << u, v;
+    double r = u*u + v*v;
+    double k_1 = filter_->radial_distortion_[0];
+    double k_2 = filter_->radial_distortion_[1];
+    double k_3 = filter_->radial_distortion_[2];
+    double t_1 = filter_->tangential_distortion_[0];
+    double t_2 = filter_->tangential_distortion_[1];
+    double d_r = 1 + k_1*r + k_2*r*r + k_3*r*r*r;
+    Eigen::Vector2d d_t;
+    d_t << 2*u*v*t_1 + (r + 2*u*u)*t_2,
+    		2*u*v*t_2 + (r + 2*v*v)*t_1;
+    return filter_->optical_center_ + filter_->focal_point_.asDiagonal()*(d_r*uv_vec + d_t);
+}
+
+

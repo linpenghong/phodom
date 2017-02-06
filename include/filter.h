@@ -11,6 +11,7 @@
 #ifndef PHODOM3_INCLUDE_FILTER_H_
 #define PHODOM3_INCLUDE_FILTER_H_
 
+#include "triangulation.h"
 #include "track.h"
 #include "imu_buffer.h"
 #include "image_item.h"
@@ -21,6 +22,7 @@
 #include "parameter_state.h"
 #include "camera_pose.h"
 #include "camera_pose_buffer.h"
+
 
 #include <cmath>
 #include <eigen3/Eigen/Core>
@@ -53,6 +55,7 @@ public:
 	BodyState bodyState;
 	ImuState imuState;
 	ParameterState paramState;
+	Triangulation triangulation;
 
 	Track feature_tracker;
 	Track::feature_track_list features_tracked;

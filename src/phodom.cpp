@@ -101,8 +101,17 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 
 		if(counter > 9)
 		{
+			//filter initialise
 			Eigen::Quaterniond g2b;
 			g2b = Rotation::fromTwoVectors(g_, gg);
+
+			filter_->optical_center_ = parameter_->getCameraOpticalCenter();
+			filter_->focal_point_ = parameter_->getCameraFocalPoint();
+			filter_->camera_delay_ = parameter_->getCameraDelayTime();
+			filter_->camera_readout_ = parameter_->getCameraReadoutTime();
+			filter_->radial_distortion_ = parameter_->getCameraRadialDistortionParams();
+			filter_->tangential_distortion_ = parameter_->getCameraTangentialDistortionParams();
+
 
 			filter_->bodyState.imu.time = time;
 			filter_->bodyState.imu.acceleration.setZero();
@@ -153,6 +162,7 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
  */
 void Phodom::imageCallback(const sensor_msgs::ImageConstPtr& msg) {
 //	std::cout << "Received a image message!" << std::endl;
+//	std::cout << msg->width << ", " << msg->height << std::endl;
 	double time = getMessageTime(msg->header.stamp);
 	cv::Mat image = cv_bridge::toCvCopy(msg, msg->encoding)->image;
 	imageItem = ImageItem(time, image);
