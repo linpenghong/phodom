@@ -12,7 +12,7 @@
 #define PHODOM3_INCLUDE_TRIANGULATION_H_
 
 #include <eigen3/Eigen/Core>
-#include <math.h>
+//#include <math.h>
 
 class Filter;
 class FeatureTrack;
@@ -31,7 +31,10 @@ public:
 	std::pair<bool, Eigen::Vector3d> getFeaturePos(const FeatureTrack &feature_track);
 	Eigen::Vector3d gFunction(Eigen::Matrix3d R_Ci_C0, Eigen::Vector3d p_Ci_C0, Eigen::Vector3d param);
 	Eigen::Vector2d cameraProject(const Eigen::Vector3d& p) const;
-	Eigen::Vector3d GaussNewton();
+	Eigen::Matrix<double, 2, 3> cameraProjectJacobian(const Eigen::Matrix3d& R_c, const Eigen::Vector3d& p_c, const Eigen::Vector3d& p) const;
+	Eigen::Vector3d getFakeParam(const Eigen::Vector3d& realParam);
+	Eigen::Vector3d getRealParam(const Eigen::Vector3d& fakeParam);
+
 private:
     const Filter* filter_;
 };

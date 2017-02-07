@@ -14,6 +14,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <eigen_conversions/eigen_msg.h>
+
 Phodom::Phodom() {
 	imuBuffer_.reset(new ImuBuffer(100));
 }
@@ -24,18 +28,46 @@ int Phodom::run()
 	std::string parameter_file = "/home/lph/catkin_ws/src/phodom3/config/parameters.yaml";
 	parameter_ = Parameter::fromPath(parameter_file);
 
+    tf_buffer_.reset(new tf2_ros::Buffer);
+    tf_listener_.reset(new tf2_ros::TransformListener(*tf_buffer_));
+
 	//---------ros subscriber and publisher---------//
     pathPub_  = nodeHandle_.advertise<nav_msgs::Path>("/path", 1);
     odomPub_  = nodeHandle_.advertise<nav_msgs::Odometry>("/odometry", 1);
-//    imuSub_   = nodeHandle_.subscribe("/walle/sensors/imu", 50, &Phodom::imuCallback, this);
+
+
+//    imuSub_   = nodeHandle_.subscribe("/kitti/oxts/imu", 50, &Phodom::imuCallback, this);
+//    imageSub_ = nodeHandle_.subscribe("/kitti/camera_color_right/image_raw", 5, &Phodom::imageCallback, this);
+
+
+    sleep(5);//waiting for tf msg
+
+    Eigen::Quaterniond q_C_B = Eigen::Quaterniond::Identity();
+    Eigen::Vector3d p_C_B;
+    try {
+        geometry_msgs::TransformStamped body_to_camera_transform = tf_buffer_->lookupTransform("wide_stereo_optical_frame", "imu_link", ros::Time(0));
+        double x = body_to_camera_transform.transform.rotation.x;
+        double y = body_to_camera_transform.transform.rotation.y;
+        double z = body_to_camera_transform.transform.rotation.z;
+        double w = body_to_camera_transform.transform.rotation.w;
+        q_C_B = Eigen::Quaterniond(w, x, y, z);
+
+        tf::vectorMsgToEigen(body_to_camera_transform.transform.translation, p_C_B);
+    } catch (tf2::TransformException& e) {
+        ROS_ERROR("%s", e.what());
+        return 1;
+    }
+
     imuSub_   = nodeHandle_.subscribe("/torso_lift_imu/data", 50, &Phodom::imuCallback, this);
     imageSub_ = nodeHandle_.subscribe("/wide_stereo/left/image_rect", 5, &Phodom::imageCallback, this);
 
     filter_.reset(new Filter(parameter_, imuBuffer_));
-
+    filter_->parameter->setBodyToCameraRotation(q_C_B);
+    filter_->position_of_body_in_camera_ = -p_C_B;
     ros::spin();
     return 0;
 }
+
 
 /*
  * imu callback, all message received would be pushed_back to the imu buffer
@@ -43,6 +75,7 @@ int Phodom::run()
 void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 //	std::cout << "Received a imu message!" << std::endl;
 //	std::cout << "Reference state: " << msg->orientation.x << ", " << msg->orientation.y << ", " << msg->orientation.z << ", " << msg->orientation.w << std::endl;
+
 	double time = getMessageTime(msg->header.stamp);
 	ImuItem imu;
 	imu.time = time;
@@ -103,7 +136,7 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 		{
 			//filter initialise
 			Eigen::Quaterniond g2b;
-			g2b = Rotation::fromTwoVectors(g_, gg);
+			g2b = Rotation::fromTwoVectors(g_, gg/10.0);
 
 			filter_->optical_center_ = parameter_->getCameraOpticalCenter();
 			filter_->focal_point_ = parameter_->getCameraFocalPoint();
@@ -111,6 +144,19 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
 			filter_->camera_readout_ = parameter_->getCameraReadoutTime();
 			filter_->radial_distortion_ = parameter_->getCameraRadialDistortionParams();
 			filter_->tangential_distortion_ = parameter_->getCameraTangentialDistortionParams();
+
+//			geometry_msgs::TransformStamped map_to_body_transform = tf_buffer_->lookupTransform("imu_link", "map", ros::Time(0));
+//			double x = map_to_body_transform.transform.rotation.x;
+//			double y = map_to_body_transform.transform.rotation.y;
+//			double z = map_to_body_transform.transform.rotation.z;
+//			double w = map_to_body_transform.transform.rotation.w;
+//			Eigen::Quaterniond q_B_G(w, x, y, z);
+//			Eigen::Vector3d p_B_G;
+//			tf::vectorMsgToEigen(map_to_body_transform.transform.translation, p_B_G);
+//			Eigen::Quaterniond odom_transform(-0.05,0.998749, -0.1, 0);
+//			odom_transform.normalize();
+//			filter_->bodyState.p_B_G = p_B_G;
+//			filter_->bodyState.q_B_G = odom_transform*q_B_G;
 
 
 			filter_->bodyState.imu.time = time;
@@ -161,11 +207,26 @@ void Phodom::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
  * image callback
  */
 void Phodom::imageCallback(const sensor_msgs::ImageConstPtr& msg) {
-//	std::cout << "Received a image message!" << std::endl;
+	std::cout << "=============Received a image message!==============" << std::endl;
+	std::cout << "image frame id = " << msg->header.frame_id << std::endl;
 //	std::cout << msg->width << ", " << msg->height << std::endl;
 	double time = getMessageTime(msg->header.stamp);
 	cv::Mat image = cv_bridge::toCvCopy(msg, msg->encoding)->image;
 	imageItem = ImageItem(time, image);
+
+	//force the body state be the same with tf
+//	geometry_msgs::TransformStamped map_to_body_transform = tf_buffer_->lookupTransform("map", "imu_link", msg->header.stamp);
+//	double x = map_to_body_transform.transform.rotation.x;
+//	double y = map_to_body_transform.transform.rotation.y;
+//	double z = map_to_body_transform.transform.rotation.z;
+//	double w = map_to_body_transform.transform.rotation.w;
+//	Eigen::Quaterniond q_B_G(w, x, y, z);
+//	Eigen::Vector3d p_B_G;
+//	tf::vectorMsgToEigen(map_to_body_transform.transform.translation, p_B_G);
+//	Eigen::Quaterniond odom_transform(0,1,0,0);
+//	filter_->bodyState.p_B_G = p_B_G;
+//	filter_->bodyState.q_B_G = odom_transform*q_B_G;
+//	filter_->bodyState.v_B_G.setZero();
 
 	filter_->stepImage(imageItem.getTime(), imageItem.getImage(), imuIter_);
 

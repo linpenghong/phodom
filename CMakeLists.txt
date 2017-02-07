@@ -15,6 +15,7 @@ find_package(catkin REQUIRED
 find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(eigen_conversions REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options filesystem)
 find_package(cv_bridge REQUIRED)
 
@@ -169,6 +170,7 @@ target_link_libraries(ros_test
   ${Boost_LIBRARIES}
   ${OpenCV_LIBS}
   ${cv_bridge_LIBRARIES}
+  ${eigen_conversions_LIBRARIES}
 )
 #############
 ## Install ##

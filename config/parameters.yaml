@@ -14,6 +14,15 @@ Camera.cameraReadoutTime: 0
 
 Camera.imageNoiseVariance: 2.0
 
+##kitti 2011_09_26_drive_0001_sync left camera gray
+#Camera.focalPoint: [984.2439 980.8141]
+#Camera.opticalCenter: [690.0 233.1966]
+#Camera.radialDistortion: [0.002219027 0.001383707 -0.07233722]
+#Camera.tangentialDistortion: [-0.3728755 0.2037299]
+#Camera.cameraDelayTime: 0
+#Camera.cameraReadoutTime: 0
+#Camera.imageNoiseVariance: 2.0
+
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------
@@ -37,7 +46,7 @@ Imu.Ta: [1 0 0; 0 1 0; 0 0 1]
 Imu.accelerometerBias: [0 0 0]
 Imu.gyroscopeBias: [0 0 0]
 
-Imu.globalGravity: [0.0 0.0 -9.78]
+Imu.globalGravity: [0.0 0.0 -9.77]
 
 Imu.accelerometerVariance: 0.008
 Imu.gyroscopeVariance: 0.0001

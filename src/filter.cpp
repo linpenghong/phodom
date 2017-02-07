@@ -110,8 +110,7 @@ void Filter::stepImage(double time, cv::Mat& frame, const ImuBuffer::iterator& h
         }
     	std::pair<bool, Eigen::Vector3d> res;
     	res = triangulation.getFeaturePos(*feature);
-    	std::cout << "triangulation result = \n" << res.second.transpose() << std::endl;
-    	break;//loop once
+    	std::cout << "triangulation result = " << res.second.transpose() << std::endl << std::endl << std::endl;
     }
 
     for (const std::shared_ptr<FeatureTrack>& feature : features_tracked) {
